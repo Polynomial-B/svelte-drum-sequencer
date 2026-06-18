@@ -8,15 +8,16 @@
 
 	const transport = Tone.getTransport();
 
+	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
+
 	const synths = [
 		new Tone.Synth().toDestination(),
 		new Tone.Synth().toDestination(),
 		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
+		new Tone.MembraneSynth().toDestination(),
 	];
 
-	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
-	const synthNotes = ["E", "G", "B", "D"];
+	const synthNotes = ["E2", "G3", "B3", "D2"];
 
 	let rows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
@@ -39,7 +40,22 @@
 
 	let mountId: number;
 
-	// ! TODO Synth Trigger
+	onMount(() => {
+		mountId = transport.scheduleRepeat((time) => {
+			rows.forEach((row, index) => {
+				let synth = synths[index];
+				let note = row[beat];
+				if (note.active)
+					synth.triggerAttackRelease(note.note, "16n", time);
+			});
+			beat = (beat + 1) % 16;
+		}, "16n");
+	});
+
+	onDestroy(() => {
+		transport.clear(mountId);
+		transport.stop();
+	});
 
 	const handleNoteClick = (rowIndex: number, noteIndex: number) => {
 		rows[rowIndex][noteIndex].active = !rows[rowIndex][noteIndex].active;
@@ -102,7 +118,7 @@
 		font-size: 1.5rem;
 		margin: 0 auto;
 	}
-	.live {
+	.beat-indicator.live {
 		background: #05f18f;
 	}
 
