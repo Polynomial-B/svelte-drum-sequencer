@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from "svelte";
 	import * as Tone from "tone";
+	import { hatsEnvelope, hatsFilter, triggerSnare } from "./lib/constants";
 
 	let bpm: number = $state(120);
 	let isPlaying = $state(false);
@@ -11,30 +12,38 @@
 	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
 
 	const synths = [
+		new Tone.NoiseSynth().toDestination(),
 		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
+		() => triggerSnare(),
 		new Tone.MembraneSynth().toDestination(),
 	];
 
-	const synthNotes = ["E2", "G3", "B3", "D2"];
+	const synthNotes = ["B4", "G3", "E3", "D2"];
 
 	let rows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
-			note: synthNotes[3],
-			active: false,
-		})),
-		Array.from({ length: 16 }, (_, i) => ({
-			note: synthNotes[2],
-			active: false,
-		})),
-		Array.from({ length: 16 }, (_, i) => ({
-			note: synthNotes[1],
-			active: false,
-		})),
-		Array.from({ length: 16 }, (_, i) => ({
+			type: "hihat",
 			note: synthNotes[0],
 			active: false,
+			length: "16n",
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			type: "synth",
+			note: synthNotes[1],
+			active: false,
+			length: "16n",
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			type: "snare",
+			note: synthNotes[2],
+			active: false,
+			length: "8n",
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			type: "synth",
+			note: synthNotes[3],
+			active: false,
+			length: "16n",
 		})),
 	]);
 
@@ -45,8 +54,22 @@
 			rows.forEach((row, index) => {
 				let synth = synths[index];
 				let note = row[beat];
-				if (note.active)
-					synth.triggerAttackRelease(note.note, "16n", time);
+				if (!note.active) return;
+
+				switch (note.type) {
+					case "synth":
+						synth.triggerAttackRelease(
+							note.note,
+							note.length,
+							time,
+						);
+						break;
+					case "hihat":
+						synth.triggerAttackRelease("16n", time);
+						break;
+					case "snare":
+						triggerSnare(time);
+				}
 			});
 			beat = (beat + 1) % 16;
 		}, "16n");
@@ -63,7 +86,7 @@
 
 	const handlePlay = () => {
 		if (!isPlaying) Tone.start();
-		console.log("playing");
+
 		transport.bpm.value = bpm;
 		transport.start();
 		isPlaying = true;
@@ -72,7 +95,6 @@
 	const handleStop = () => {
 		if (!isPlaying) beat = 0;
 
-		console.log("stopped");
 		transport.stop();
 		isPlaying = false;
 	};
@@ -81,8 +103,10 @@
 <div class="controls">
 	<button aria-label="play" onclick={handlePlay}>▶</button>
 	<button aria-label="stop" onclick={handleStop}>⏹</button>
-	<label for="bpm">BPM</label>
-	<input type="range" min="40" max="300" bind:value={bpm} />
+	<div class="input-container">
+		<label for="bpm">BPM</label>
+		<input type="range" min="40" max="240" bind:value={bpm} />
+	</div>
 
 	<span>{bpm}</span>
 </div>
@@ -116,10 +140,17 @@
 		align-items: center;
 		color: #fff;
 		font-size: 1.5rem;
-		margin: 0 auto;
+		margin: 10px auto;
 	}
 	.beat-indicator.live {
 		background: #05f18f;
+	}
+
+	.input-container {
+		width: 200px;
+		display: flex;
+		justify-content: right;
+		align-items: center;
 	}
 
 	.sequencer {
