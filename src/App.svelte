@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onDestroy, onMount } from "svelte";
 	import * as Tone from "tone";
-	import { hatsEnvelope, hatsFilter, triggerSnare } from "./lib/constants";
+	import {
+		triggerClap,
+		triggerHat,
+		triggerKick,
+		triggerSnare,
+	} from "./lib/constants";
 
 	let bpm: number = $state(120);
 	let isPlaying = $state(false);
@@ -11,37 +16,24 @@
 
 	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
 
-	const synths = [
-		new Tone.NoiseSynth().toDestination(),
-		new Tone.Synth().toDestination(),
-		() => triggerSnare(),
-		new Tone.MembraneSynth().toDestination(),
-	];
-
-	const synthNotes = ["B4", "G3", "E3", "D2"];
-
 	let rows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
 			type: "hihat",
-			note: synthNotes[0],
 			active: false,
 			length: "16n",
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
-			type: "synth",
-			note: synthNotes[1],
+			type: "clap",
 			active: false,
 			length: "16n",
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
 			type: "snare",
-			note: synthNotes[2],
 			active: false,
 			length: "8n",
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
-			type: "synth",
-			note: synthNotes[3],
+			type: "kick",
 			active: false,
 			length: "16n",
 		})),
@@ -50,25 +42,25 @@
 	let mountId: number;
 
 	onMount(() => {
-		mountId = transport.scheduleRepeat((time) => {
-			rows.forEach((row, index) => {
-				let synth = synths[index];
+		mountId = transport.scheduleRepeat((time?) => {
+			rows.forEach((row) => {
 				let note = row[beat];
+
 				if (!note.active) return;
 
 				switch (note.type) {
-					case "synth":
-						synth.triggerAttackRelease(
-							note.note,
-							note.length,
-							time,
-						);
-						break;
 					case "hihat":
-						synth.triggerAttackRelease("16n", time);
+						triggerHat(time);
+						break;
+					case "clap":
+						triggerClap(time);
 						break;
 					case "snare":
 						triggerSnare(time);
+						break;
+					case "kick":
+						triggerKick(time);
+						break;
 				}
 			});
 			beat = (beat + 1) % 16;
