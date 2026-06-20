@@ -12,6 +12,10 @@
 	let isPlaying = $state(false);
 	let beat = $state(0);
 
+	$effect(() => {
+		transport.bpm.value = bpm;
+	});
+
 	const transport = Tone.getTransport();
 
 	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
@@ -78,8 +82,6 @@
 
 	const handlePlay = () => {
 		if (!isPlaying) Tone.start();
-
-		transport.bpm.value = bpm;
 		transport.start();
 		isPlaying = true;
 	};
