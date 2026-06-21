@@ -2,6 +2,7 @@
 	import { onDestroy, onMount } from "svelte";
 	import * as Tone from "tone";
 	import {
+		synthNotes,
 		triggerClap,
 		triggerHat,
 		triggerKick,
@@ -43,11 +44,57 @@
 		})),
 	]);
 
-	let mountId: number;
+	let synthRows = $state([
+		Array.from({ length: 16 }, (_, i) => ({
+			active: false,
+			note: synthNotes[0],
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			active: false,
+			note: synthNotes[1],
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			active: false,
+			note: synthNotes[2],
+		})),
+		Array.from({ length: 16 }, (_, i) => ({
+			active: false,
+			note: synthNotes[3],
+		})),
+	]);
+
+	let drumMountId: number;
+	let synthMountId: number;
 
 	onMount(() => {
-		mountId = transport.scheduleRepeat((time?) => {
+		drumMountId = transport.scheduleRepeat((time?) => {
 			rows.forEach((row) => {
+				let perc = row[beat];
+
+				if (!perc.active) return;
+
+				switch (perc.type) {
+					case "hihat":
+						triggerHat(time);
+						break;
+					case "clap":
+						triggerClap(time);
+						break;
+					case "snare":
+						triggerSnare(time);
+						break;
+					case "kick":
+						triggerKick(time);
+						break;
+				}
+			});
+			beat = (beat + 1) % 16;
+		}, "16n");
+	});
+
+	onMount(() => {
+		synthMountId = transport.scheduleRepeat((time?) => {
+			synthRows.forEach((row) => {
 				let note = row[beat];
 
 				if (!note.active) return;
@@ -72,12 +119,17 @@
 	});
 
 	onDestroy(() => {
-		transport.clear(mountId);
+		transport.clear(drumMountId);
+		transport.clear(synthMountId);
 		transport.stop();
 	});
 
-	const handleNoteClick = (rowIndex: number, noteIndex: number) => {
+	const handleDrumClick = (rowIndex: number, noteIndex: number) => {
 		rows[rowIndex][noteIndex].active = !rows[rowIndex][noteIndex].active;
+	};
+	const handleNoteClick = (rowIndex: number, noteIndex: number) => {
+		synthRows[rowIndex][noteIndex].active =
+			!rows[rowIndex][noteIndex].active;
 	};
 
 	const handlePlay = () => {
@@ -102,7 +154,11 @@
 		<input type="range" min="40" max="240" bind:value={bpm} />
 	</div>
 
-	<span>{bpm}</span>
+	<div class="bpm-container">
+		<span>
+			{bpm}
+		</span>
+	</div>
 </div>
 
 <div class="sequencer">
@@ -112,9 +168,24 @@
 	{#each rows as row, i}
 		{#each row as note, j}
 			<button
-				aria-label="active/deactivate note"
+				aria-label="active/deactivate drum sound"
+				onclick={() => handleDrumClick(i, j)}
+				class="grid"
+				class:active={note.active}
+				class:bar_break={j % 4 === 0}
+			>
+			</button>
+		{/each}
+	{/each}
+</div>
+
+<div class="note_sequencer">
+	{#each synthRows as row, i}
+		{#each row as note, j}
+			<button
+				aria-label="active/deactivate synth note"
 				onclick={() => handleNoteClick(i, j)}
-				class="note"
+				class="grid"
 				class:active={note.active}
 				class:bar_break={j % 4 === 0}
 			>
@@ -141,23 +212,27 @@
 	}
 
 	.input-container {
-		width: 200px;
+		width: 190px;
 		display: flex;
-		justify-content: right;
+		justify-content: space-between;
 		align-items: center;
+		margin-left: 20px;
+		font-size: 1.2em;
+		font-weight: 600;
 	}
 
-	.sequencer {
+	.sequencer,
+	.note_sequencer {
 		display: grid;
 		grid-template-columns: repeat(16, 1fr);
 		gap: 5px;
 		width: 100%;
 		justify-items: center;
 		width: fit-content;
-		margin: 0 auto;
+		margin: 0 auto 44px;
 	}
 
-	.note {
+	.grid {
 		height: 44px;
 		width: 44px;
 		aspect-ratio: 1;
@@ -168,7 +243,7 @@
 		justify-content: center;
 	}
 
-	.note.active {
+	.grid.active {
 		background-color: coral;
 	}
 
@@ -203,5 +278,14 @@
 
 	.bar_break {
 		background-color: rgb(177, 180, 182);
+	}
+
+	.bpm-container {
+		width: 60px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.2em;
+		font-weight: 600;
 	}
 </style>
