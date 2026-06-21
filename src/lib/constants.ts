@@ -1,7 +1,7 @@
 import * as Tone from "tone";
 
-const kickTone = "F2";
-
+const kickTone: string = "F2";
+export const synthNotes: string[] = ["G3", "A4", "C4", "E4"];
 // * Hi Hats
 
 const hatsFilter = new Tone.Filter(4400, "highpass").toDestination();
@@ -28,7 +28,7 @@ const noise = new Tone.NoiseSynth({
   },
   envelope: {
     attack: 0.0005,
-    decay: 0.12,
+    decay: 0.22,
     sustain: 0,
     release: 0.03,
   },
@@ -58,7 +58,15 @@ export function triggerSnare(time?: number) {
 
 // * Kick
 
-const kick = new Tone.MembraneSynth().toDestination();
+const kick = new Tone.MembraneSynth({
+  envelope: {
+    attack: 0.001,
+    decay: 0.12,
+    sustain: 0,
+    release: 0.02,
+  },
+  pitchDecay: 0.015,
+}).toDestination();
 
 export function triggerKick(time?: number) {
   kick.triggerAttackRelease(kickTone, "16n", time);
