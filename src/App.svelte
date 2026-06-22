@@ -18,6 +18,7 @@
 	});
 
 	const transport = Tone.getTransport();
+	const synthTransport = Tone.getTransport();
 
 	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
 
@@ -43,6 +44,13 @@
 			length: "16n",
 		})),
 	]);
+
+	const synths = [
+		new Tone.Synth().toDestination(),
+		new Tone.Synth().toDestination(),
+		new Tone.Synth().toDestination(),
+		new Tone.Synth().toDestination(),
+	];
 
 	let synthRows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
@@ -71,48 +79,33 @@
 			rows.forEach((row) => {
 				let perc = row[beat];
 
-				if (!perc.active) return;
-
-				switch (perc.type) {
-					case "hihat":
-						triggerHat(time);
-						break;
-					case "clap":
-						triggerClap(time);
-						break;
-					case "snare":
-						triggerSnare(time);
-						break;
-					case "kick":
-						triggerKick(time);
-						break;
+				if (perc.active) {
+					switch (perc.type) {
+						case "hihat":
+							triggerHat(time);
+							break;
+						case "clap":
+							triggerClap(time);
+							break;
+						case "snare":
+							triggerSnare(time);
+							break;
+						case "kick":
+							triggerKick(time);
+							break;
+					}
 				}
 			});
-			beat = (beat + 1) % 16;
-		}, "16n");
-	});
+			synthRows.forEach((synthRow, si) => {
+				let note = synthRow[beat];
+				let synthToPlay = synths[si];
 
-	onMount(() => {
-		synthMountId = transport.scheduleRepeat((time?) => {
-			synthRows.forEach((row) => {
-				let note = row[beat];
-
-				if (!note.active) return;
-
-				switch (note.type) {
-					case "hihat":
-						triggerHat(time);
-						break;
-					case "clap":
-						triggerClap(time);
-						break;
-					case "snare":
-						triggerSnare(time);
-						break;
-					case "kick":
-						triggerKick(time);
-						break;
-				}
+				if (note.active)
+					synthToPlay.triggerAttackRelease(
+						synthNotes[si],
+						"16n",
+						time,
+					);
 			});
 			beat = (beat + 1) % 16;
 		}, "16n");
@@ -120,16 +113,15 @@
 
 	onDestroy(() => {
 		transport.clear(drumMountId);
-		transport.clear(synthMountId);
 		transport.stop();
 	});
 
 	const handleDrumClick = (rowIndex: number, noteIndex: number) => {
 		rows[rowIndex][noteIndex].active = !rows[rowIndex][noteIndex].active;
 	};
-	const handleNoteClick = (rowIndex: number, noteIndex: number) => {
-		synthRows[rowIndex][noteIndex].active =
-			!rows[rowIndex][noteIndex].active;
+	const handleNoteClick = (synthRowIndex: number, synthNoteIndex: number) => {
+		synthRows[synthRowIndex][synthNoteIndex].active =
+			!synthRows[synthRowIndex][synthNoteIndex].active;
 	};
 
 	const handlePlay = () => {

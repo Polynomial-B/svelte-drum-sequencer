@@ -1,7 +1,8 @@
 import * as Tone from "tone";
 
 const kickTone: string = "F2";
-export const synthNotes: string[] = ["G3", "A4", "C4", "E4"];
+export const synthNotes: string[] = ["G3", "E3", "C3", "A2"];
+
 // * Hi Hats
 
 const hatsFilter = new Tone.Filter(4400, "highpass").toDestination();
@@ -18,8 +19,9 @@ export function triggerHat(time?: number) {
 // * Snare
 
 const noiseFilter = new Tone.Filter({
-  type: "highpass",
-  frequency: 1800,
+  type: "bandpass",
+  frequency: 1200,
+  Q: 2,
 }).toDestination();
 
 const noise = new Tone.NoiseSynth({
