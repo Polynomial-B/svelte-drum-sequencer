@@ -12,13 +12,13 @@
 	let bpm: number = $state(120);
 	let isPlaying = $state(false);
 	let beat = $state(0);
+	let chords = $state(synthNotes.Am7);
 
 	$effect(() => {
 		transport.bpm.value = bpm;
 	});
 
 	const transport = Tone.getTransport();
-	const synthTransport = Tone.getTransport();
 
 	let beatIndicators = Array.from({ length: 16 }, (_, i) => i);
 
@@ -55,24 +55,23 @@
 	let synthRows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
 			active: false,
-			note: synthNotes[0],
+			note: chords[0],
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
 			active: false,
-			note: synthNotes[1],
+			note: chords[1],
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
 			active: false,
-			note: synthNotes[2],
+			note: chords[2],
 		})),
 		Array.from({ length: 16 }, (_, i) => ({
 			active: false,
-			note: synthNotes[3],
+			note: chords[3],
 		})),
 	]);
 
 	let drumMountId: number;
-	let synthMountId: number;
 
 	onMount(() => {
 		drumMountId = transport.scheduleRepeat((time?) => {
@@ -101,11 +100,7 @@
 				let synthToPlay = synths[si];
 
 				if (note.active)
-					synthToPlay.triggerAttackRelease(
-						synthNotes[si],
-						"16n",
-						time,
-					);
+					synthToPlay.triggerAttackRelease(chords[si], "16n", time);
 			});
 			beat = (beat + 1) % 16;
 		}, "16n");
@@ -124,6 +119,10 @@
 			!synthRows[synthRowIndex][synthNoteIndex].active;
 	};
 
+	const handleChordsClick = () => {
+		chords = synthNotes.Am7;
+	};
+
 	const handlePlay = () => {
 		if (!isPlaying) Tone.start();
 		transport.start();
@@ -131,7 +130,19 @@
 	};
 
 	const handleStop = () => {
-		if (!isPlaying) beat = 0;
+		if (!isPlaying) {
+			beat = 0;
+			synthRows.forEach((synth) => {
+				synth.forEach((note) => {
+					note.active = false;
+				});
+			});
+			rows.forEach((synth) => {
+				synth.forEach((note) => {
+					note.active = false;
+				});
+			});
+		}
 
 		transport.stop();
 		isPlaying = false;
@@ -186,6 +197,11 @@
 	{/each}
 </div>
 
+<!-- <div class="chord-container">
+	<button onclick={handleChordsClick}>Am7</button>
+	<button onclick={handleChordsClick}>Gm7</button>
+</div> -->
+
 <style>
 	.beat-indicator {
 		width: 10px;
@@ -200,7 +216,7 @@
 		margin: 10px auto;
 	}
 	.beat-indicator.live {
-		background: #05f18f;
+		background: #f105a6;
 	}
 
 	.input-container {

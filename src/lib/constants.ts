@@ -1,7 +1,11 @@
 import * as Tone from "tone";
 
 const kickTone: string = "F2";
-export const synthNotes: string[] = ["G3", "E3", "C3", "A2"];
+
+export const synthNotes = {
+  Am7: ["G3", "E3", "C3", "A2"],
+  Gm7: ["F3", "D3", "B2", "G2"],
+};
 
 // * Hi Hats
 
