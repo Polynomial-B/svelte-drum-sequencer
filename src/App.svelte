@@ -8,11 +8,12 @@
 		triggerKick,
 		triggerSnare,
 	} from "./lib/constants";
+	import type { SynthType } from "./lib/types";
 
 	let bpm: number = $state(120);
 	let isPlaying = $state(false);
 	let beat = $state(0);
-	let chords = $state(synthNotes.Am7);
+	let chords = $state(synthNotes[0].notes);
 	let chordStylePlaying = $state(false);
 
 	$effect(() => {
@@ -72,10 +73,6 @@
 		})),
 	]);
 
-	$effect(() => {
-		console.log(chords[0]);
-	});
-
 	let drumMountId: number;
 
 	onMount(() => {
@@ -126,11 +123,8 @@
 			!synthRows[synthRowIndex][synthNoteIndex].active;
 	};
 
-	const handleChordsClick = () => {
-		chords = synthNotes.Gm7;
-	};
-	const handleChordsClickTwo = () => {
-		chords = synthNotes.Am7;
+	const handleChordsClick = (item: SynthType) => {
+		chords = item.notes;
 	};
 
 	const handlePlay = () => {
@@ -208,18 +202,14 @@
 </div>
 
 <div class="chord-container">
-	<button
-		class={chordStylePlaying === true && chords === synthNotes.Am7
-			? "chord-class"
-			: ""}
-		onclick={handleChordsClick}>Am7</button
-	>
-	<button
-		onclick={handleChordsClickTwo}
-		class={chordStylePlaying === true && chords === synthNotes.Gm7
-			? "chord-class"
-			: ""}>Gm7</button
-	>
+	{#snippet button(item: SynthType)}
+		<button class="chord-class" onclick={() => handleChordsClick(item)}
+			>{item.name}</button
+		>
+	{/snippet}
+	{#each synthNotes as synthNote}
+		{@render button(synthNote)}
+	{/each}
 </div>
 
 <style>
