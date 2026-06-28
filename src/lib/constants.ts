@@ -3,8 +3,8 @@ import * as Tone from "tone";
 const kickTone: string = "F2";
 
 export const synthNotes = {
-  Am7: ["G3", "E3", "C3", "A2"],
-  Gm7: ["F3", "D3", "B2", "G2"],
+  Am7: ["G4", "E4", "C4", "G3"],
+  Gm7: ["G4", "E4", "B3", "G3"],
 };
 
 // * Hi Hats

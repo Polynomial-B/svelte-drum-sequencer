@@ -13,6 +13,7 @@
 	let isPlaying = $state(false);
 	let beat = $state(0);
 	let chords = $state(synthNotes.Am7);
+	let chordStylePlaying = $state(false);
 
 	$effect(() => {
 		transport.bpm.value = bpm;
@@ -71,6 +72,10 @@
 		})),
 	]);
 
+	$effect(() => {
+		console.log(chords[0]);
+	});
+
 	let drumMountId: number;
 
 	onMount(() => {
@@ -95,12 +100,14 @@
 					}
 				}
 			});
+			chordStylePlaying = false;
 			synthRows.forEach((synthRow, si) => {
 				let note = synthRow[beat];
 				let synthToPlay = synths[si];
-
-				if (note.active)
+				if (note.active) {
 					synthToPlay.triggerAttackRelease(chords[si], "16n", time);
+					chordStylePlaying = true;
+				}
 			});
 			beat = (beat + 1) % 16;
 		}, "16n");
@@ -120,6 +127,9 @@
 	};
 
 	const handleChordsClick = () => {
+		chords = synthNotes.Gm7;
+	};
+	const handleChordsClickTwo = () => {
 		chords = synthNotes.Am7;
 	};
 
@@ -197,10 +207,20 @@
 	{/each}
 </div>
 
-<!-- <div class="chord-container">
-	<button onclick={handleChordsClick}>Am7</button>
-	<button onclick={handleChordsClick}>Gm7</button>
-</div> -->
+<div class="chord-container">
+	<button
+		class={chordStylePlaying === true && chords === synthNotes.Am7
+			? "chord-class"
+			: ""}
+		onclick={handleChordsClick}>Am7</button
+	>
+	<button
+		onclick={handleChordsClickTwo}
+		class={chordStylePlaying === true && chords === synthNotes.Gm7
+			? "chord-class"
+			: ""}>Gm7</button
+	>
+</div>
 
 <style>
 	.beat-indicator {
@@ -295,5 +315,10 @@
 		justify-content: center;
 		font-size: 1.2em;
 		font-weight: 600;
+	}
+
+	.chord-class {
+		background-color: rgb(181, 146, 216);
+		transform: scale(1.1);
 	}
 </style>
