@@ -3,6 +3,7 @@
 	import * as Tone from "tone";
 	import {
 		synthNotes,
+		synths,
 		triggerClap,
 		triggerHat,
 		triggerKick,
@@ -46,13 +47,6 @@
 			length: "16n",
 		})),
 	]);
-
-	const synths = [
-		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
-		new Tone.Synth().toDestination(),
-	];
 
 	let synthRows = $state([
 		Array.from({ length: 16 }, (_, i) => ({
@@ -124,7 +118,9 @@
 	};
 
 	const handleChordsClick = (item: SynthType) => {
+		console.log(item.notes);
 		chords = item.notes;
+		console.log(chords);
 	};
 
 	const handlePlay = () => {
@@ -170,7 +166,7 @@
 
 <div class="sequencer">
 	{#each beatIndicators as _, i}
-		<div class="beat-indicator" class:live={i == beat ? "live" : ""}></div>
+		<div class="beat-indicator" class:live={i === beat ? "live" : ""}></div>
 	{/each}
 	{#each rows as row, i}
 		{#each row as note, j}
@@ -193,7 +189,7 @@
 				aria-label="active/deactivate synth note"
 				onclick={() => handleNoteClick(i, j)}
 				class="grid"
-				class:active={note.active}
+				class:synth-active={note.active}
 				class:bar_break={j % 4 === 0}
 			>
 			</button>
@@ -203,8 +199,13 @@
 
 <div class="chord-container">
 	{#snippet button(item: SynthType)}
-		<button class="chord-class" onclick={() => handleChordsClick(item)}
-			>{item.name}</button
+		<button
+			class="chord-class"
+			class:chord-active={chords.join() == item.notes.join()}
+			aria-label={item.notes.join() !== chords.join()
+				? "current chords playing.."
+				: "switch to {item.name} chords"}
+			onclick={() => handleChordsClick(item)}>{item.name}</button
 		>
 	{/snippet}
 	{#each synthNotes as synthNote}
@@ -213,6 +214,9 @@
 </div>
 
 <style>
+	:root {
+		--primary-color: #aa3bff;
+	}
 	.beat-indicator {
 		width: 10px;
 		height: 10px;
@@ -250,6 +254,28 @@
 		margin: 0 auto 44px;
 	}
 
+	.grid.active {
+		background-color: coral;
+	}
+
+	.note_sequencer button {
+		opacity: 20%;
+		border: 1px solid rgb(1, 1, 1);
+	}
+
+	.note_sequencer button:nth-child(4n - 1) {
+		background-color: rgb(129, 225, 249);
+	}
+	.note_sequencer button:nth-child(4n -2) {
+		background-color: rgb(212, 244, 255);
+	}
+	.note_sequencer button:nth-child(4n - 3) {
+		background-color: rgb(252, 191, 240);
+	}
+	.note_sequencer button:nth-child(4n) {
+		background-color: rgb(255, 233, 233);
+	}
+
 	.grid {
 		height: 44px;
 		width: 44px;
@@ -259,10 +285,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-	}
-
-	.grid.active {
-		background-color: coral;
 	}
 
 	.controls {
@@ -288,7 +310,7 @@
 	}
 
 	button:active {
-		transform: scale(0.9);
+		transform: scale(0.95);
 	}
 	.controls button:active {
 		background-color: coral;
@@ -308,7 +330,21 @@
 	}
 
 	.chord-class {
-		background-color: rgb(181, 146, 216);
-		transform: scale(1.1);
+		width: 60px;
+		height: 44px;
+		border-radius: 10px;
+		display: inline;
+		margin: 0 10px 0;
+		font-size: 1.2em;
+		font-weight: 500;
+	}
+
+	.chord-active {
+		background-color: rgb(213, 143, 185);
+	}
+
+	button.synth-active {
+		opacity: 100%;
+		border: transparent;
 	}
 </style>

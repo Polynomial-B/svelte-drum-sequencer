@@ -1,18 +1,26 @@
 import * as Tone from "tone";
-import type { SynthType } from "./types";
 
 const kickTone: string = "F2";
 
 export const synthNotes = [
+  { name: "Am", notes: ["E4", "C4", "A3", "E3"] },
+  { name: "Bdim", notes: ["F4", "D4", "B3", "F3"] },
   { name: "C", notes: ["G4", "E4", "C4", "G3"] },
   { name: "Dm", notes: ["A4", "F4", "D4", "A3"] },
   { name: "Em", notes: ["B4", "G4", "E4", "B3"] },
   { name: "F", notes: ["C5", "A4", "F4", "C4"] },
   { name: "G", notes: ["D5", "B4", "G4", "D4"] },
   { name: "Am", notes: ["E5", "C5", "A4", "E4"] },
-  { name: "Bdim", notes: ["F5", "D5", "B4", "F4"] },
-  { name: "C", notes: ["G5", "E5", "C5", "G4"] },
-] as const;
+];
+
+// * Synth
+
+export const synths = [
+  new Tone.Synth().toDestination(),
+  new Tone.Synth().toDestination(),
+  new Tone.Synth().toDestination(),
+  new Tone.Synth().toDestination(),
+];
 
 // * Hi Hats
 
